@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
-let storySchema = new mongoose.Schema({
-  heading: {
-    type: String,
-    required: true,
-  },
 
-  description: {
+const slideSchema = new mongoose.Schema({
+  slideHeading: {
     type: String,
     required: true,
   },
-  imageUrl: {
+  slideDescription: {
+    type: String,
+    required: true,
+  },
+  slideImageUrl: {
     type: String,
     required: true,
   },
@@ -18,10 +18,19 @@ let storySchema = new mongoose.Schema({
     enum: ["food", "health and fitness", "travel", "movies", "education"],
     required: true,
   },
+});
+
+const storySchema = new mongoose.Schema({
+  slides: [slideSchema],
+
   addedbyuser: {
     type: String,
     required: true,
   },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
-module.exports = mongoose.model("story", storySchema);
+
+module.exports = mongoose.model("Story", storySchema);

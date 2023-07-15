@@ -9,7 +9,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Bookmark = require("./models/Bookmark");
 const Like = require("./models/Likes");
-
+const cors = require("cors");
+app.use(cors());
 dotenv.config();
 app.use(express.json());
 app.use((err, req, res, next) => {
@@ -60,13 +61,13 @@ app.post("/api/login", async (req, resp) => {
       if (checkPassword) {
         const jwtToken = jwt.sign({ username }, process.env.SECRET_KEY);
         return resp.status(200).json({
-          message: "User logged in successfully",
+          success: "User logged in successfully",
           jwtToken,
           name: username,
         });
       }
     }
-    return resp.status(400).json({ message: "Invalid credentials" });
+    return resp.json({ error: "Please enter valid username" });
   } catch (error) {
     return resp.json({ error: "something went wrong" });
   }
@@ -74,46 +75,67 @@ app.post("/api/login", async (req, resp) => {
 //add story
 app.post("/api/addstory", IsAuthenticated, async (req, resp) => {
   try {
-    const { heading, description, imageUrl, category } = req.body;
-    if (!heading || !description || !imageUrl || !category) {
+    const { slides } = req.body;
+
+    if (!slides) {
       return resp.json({ error: "All fields are required" });
     }
+
+    if (slides.length < 3 || slides.length > 6) {
+      return resp.json({
+        error:
+          "A story must have a minimum of 3 slides and a maximum of 6 slides",
+      });
+    }
+
     const loggedInUser = req.user.username;
-    console.log(loggedInUser);
+
     const storyData = new Story({
-      heading,
-      description,
-      imageUrl,
-      category,
+      slides: slides.map((slide) => ({ ...slide })),
+
       addedbyuser: loggedInUser,
     });
+    console.log(storyData);
     const addStory = await storyData.save();
+
     return resp.json({
       message: "Story uploaded successfully",
+      story: addStory,
     });
   } catch (error) {
     return resp.status(500).json({ error: "Internal server error" });
   }
 });
+
 //API to  edit story
-app.post("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
+// API to edit story and slides
+app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
   try {
     const storyId = req.params.id;
-    const { heading, description, imageUrl, category } = req.body;
+    const { slides } = req.body;
+
     const story = await Story.findById(storyId);
     if (!story) {
       return res.json({ error: "Story not found" });
     }
+
     if (story.addedbyuser !== req.user.username) {
       return res.status(403).json({
-        error: "User can only edit those story which is added by user",
+        error: "Only the owner can edit the story",
       });
     }
-    story.heading = heading;
-    story.description = description;
-    story.imageUrl = imageUrl;
-    story.category = category;
+
+    // Update slides
+    const updateSlides = slides.map((slide) => ({
+      slideHeading: slide.slideHeading,
+      slideDescription: slide.slideDescription,
+      slideImageUrl: slide.slideImageUrl,
+      category: slide.category,
+    }));
+    story.slides = updateSlides;
+
     const updatedStory = await story.save();
+
     return res.json({
       message: "Story updated successfully",
       story: updatedStory,
@@ -122,6 +144,7 @@ app.post("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // API to get stories by category
 app.get("/api/stories/:category", async (req, res) => {
   try {
@@ -147,15 +170,22 @@ app.get("/api/categories", async (req, res) => {
     const storiesByCategory = {};
 
     for (const category of categories) {
-      const stories = await Story.find({ category });
-      storiesByCategory[category] = stories;
+      const stories = await Story.find({}).select("slides");
+      const filteredStories = stories.filter((story) =>
+        story.slides.some((slide) => slide.category === category)
+      );
+      const filteredSlides = filteredStories.map((story) =>
+        story.slides.filter((slide) => slide.category === category)
+      );
+      storiesByCategory[category] = filteredSlides;
     }
 
-    res.json({ storiesByCategory });
+    res.json({ categories: storiesByCategory });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // API to get stories which is added by loggedin user
 app.get("/api/storiesbyuser", IsAuthenticated, async (req, res) => {
   try {
