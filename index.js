@@ -249,16 +249,19 @@ app.post(
   }
 );
 
-//api to get all the bookmark stories by user
+// api to get all the bookmark stories by user
 app.get("/api/bookmarks", IsAuthenticated, async (req, res) => {
   try {
     const loggedInUserId = req.user.username;
 
-    const bookmarks = await Bookmark.find({ bookmarkedbyuser: loggedInUserId });
-    console.log(bookmarks);
+    const bookmarks = await Bookmark.find({
+      bookmarkedbyuser: loggedInUserId,
+    }).select("story");
     const storyIds = bookmarks.map((bookmark) => bookmark.story);
 
-    const stories = await Story.find({ _id: { $in: storyIds } });
+    const stories = await Story.find({ _id: { $in: storyIds } }).populate(
+      "slides"
+    );
 
     res.json({ bookmarks: stories });
   } catch (error) {
@@ -266,7 +269,7 @@ app.get("/api/bookmarks", IsAuthenticated, async (req, res) => {
   }
 });
 
-//connect mongodb
+// connect mongodb
 app.listen(process.env.PORT, () => {
   mongoose
     .connect(process.env.MONGODB_URL)
