@@ -77,8 +77,15 @@ app.post("/api/addstory", IsAuthenticated, async (req, resp) => {
   try {
     const { slides } = req.body;
 
-    if (!slides) {
-      return resp.json({ error: "All fields are required" });
+    for (const slide of slides) {
+      if (
+        !slide.slideHeading ||
+        !slide.slideDescription ||
+        !slide.slideImageUrl ||
+        !slide.category
+      ) {
+        return resp.json({ error: "All fields are required " });
+      }
     }
 
     if (slides.length < 3 || slides.length > 6) {
