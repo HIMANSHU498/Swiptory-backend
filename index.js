@@ -254,16 +254,22 @@ app.get("/api/bookmarks", IsAuthenticated, async (req, res) => {
   try {
     const loggedInUserId = req.user.username;
 
-    const bookmarks = await Bookmark.find({
-      bookmarkedbyuser: loggedInUserId,
-    }).select("story");
+    const bookmarks = await Bookmark.find({ bookmarkedbyuser: loggedInUserId });
     const storyIds = bookmarks.map((bookmark) => bookmark.story);
+    console.log(storyIds);
 
-    const stories = await Story.find({ _id: { $in: storyIds } }).populate(
-      "slides"
-    );
-
-    res.json({ bookmarks: stories });
+    Story.findOne({ "slides._id": storyIds }, { "slides.$": 1 })
+      .then((story) => {
+        if (story) {
+          const slide = story.slides[0];
+          res.json(slide);
+        } else {
+          res.json({ error: "Slide not found" });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
