@@ -156,14 +156,14 @@ app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
 app.get("/api/stories/:category", async (req, res) => {
   try {
     const category = req.params.category;
-    const stories = await Story.find({ category });
-
+    console.log(category);
+    const stories = await Story.find({ "slides.category": category });
+    console.log(stories);
     res.json({ stories });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 // API to get all categories and their respective stories
 app.get("/api/categories", async (req, res) => {
   try {
