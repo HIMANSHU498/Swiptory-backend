@@ -282,10 +282,36 @@ app.get("/api/bookmarks", IsAuthenticated, async (req, res) => {
   }
 });
 
+// API to get a story by storyId or slideId
+app.get("/api/story/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const story = await Story.findOne({ _id: id });
+
+    if (story) {
+      return res.json({ story });
+    }
+
+    const slideStory = await Story.findOne({ "slides._id": id });
+
+    if (slideStory) {
+      return res.json({ story: slideStory });
+    }
+
+    return res.status(404).json({ error: "Story or Slide not found" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // connect mongodb
 app.listen(process.env.PORT, () => {
   mongoose
-    .connect(process.env.MONGODB_URL)
+    .connect(process.env.MONGODB_URL, {
+      useNewUrlParser: true,
+
+      useUnifiedTopology: true,
+    })
     .then(() => console.log("MongoDB server running successfully"))
     .catch((err) => console.log(err));
   console.log("Server running successfully");
