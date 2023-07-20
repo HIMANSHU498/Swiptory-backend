@@ -265,13 +265,13 @@ app.get("/api/bookmarks", IsAuthenticated, async (req, res) => {
     const storyIds = bookmarks.map((bookmark) => bookmark.story);
     console.log(storyIds);
 
-    Story.findOne({ "slides._id": storyIds }, { "slides.$": 1 })
-      .then((story) => {
-        if (story) {
-          const slide = story.slides[0];
-          res.json(slide);
+    Story.find({ "slides._id": { $in: storyIds } })
+      .then((stories) => {
+        if (stories.length > 0) {
+          const slides = stories.flatMap((story) => story.slides);
+          res.json(slides);
         } else {
-          res.json({ error: "Slide not found" });
+          res.json({ error: "Slides not found" });
         }
       })
       .catch((error) => {
