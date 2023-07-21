@@ -304,6 +304,56 @@ app.get("/api/story/:id", async (req, res) => {
   }
 });
 
+// API to search a story by its ID
+app.get("/api/stories/:id/isbookmarked", async (req, res) => {
+  try {
+    const storyId = req.params.id;
+
+    const bookmark = await Bookmark.findOne({
+      story: storyId,
+    });
+
+    if (bookmark) {
+      return res.json({ isBookmarked: true });
+    }
+
+    res.json({ isBookmarked: false });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+app.get("/api/stories/:id/isliked", async (req, res) => {
+  try {
+    const storyId = req.params.id;
+
+    const like = await Like.findOne({
+      story: storyId,
+    });
+
+    if (like) {
+      return res.json({ isLiked: true });
+    }
+
+    res.json({ isLiked: false });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//to get likes
+app.get("/api/stories/:id/likes", async (req, res) => {
+  try {
+    const storyId = req.params.id;
+
+    // Count the number of likes for the given story ID
+    const likeCount = await Like.countDocuments({ story: storyId });
+
+    res.json({ likes: likeCount });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // connect mongodb
 app.listen(process.env.PORT, () => {
   mongoose
