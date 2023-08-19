@@ -121,7 +121,15 @@ app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
     const storyId = req.params.id;
     const { slides } = req.body;
 
-    const story = await Story.findById(storyId);
+    const story = await Story.find({ "slides._id": { $in: storyId } }).then(
+      (stories) => {
+        if (stories.length > 0) {
+          const slides = stories.flatMap((story) => story.slides);
+          res.json(slides);
+          console.log(slides);
+        }
+      }
+    );
     if (!story) {
       return res.json({ error: "Story not found" });
     }
