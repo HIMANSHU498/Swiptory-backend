@@ -160,7 +160,7 @@ app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
   }
 });
 // API to get story for edit
-app.get("api/story/edit/:id", IsAuthenticated, async (req, res) => {
+app.get("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
   try {
     const slideId = req.params.id;
   
