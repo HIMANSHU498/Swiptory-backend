@@ -121,15 +121,7 @@ app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
     const storyId = req.params.id;
     const { slides } = req.body;
 
-    const story = await Story.find({ "slides._id": { $in: storyId } }).then(
-      (stories) => {
-        if (stories.length > 0) {
-          const slides = stories.flatMap((story) => story.slides);
-          res.json(slides);
-          console.log(slides);
-        }
-      }
-    );
+   const story = await Story.findOne({ "slides._id": storyId });
     if (!story) {
       return res.json({ error: "Story not found" });
     }
@@ -164,9 +156,9 @@ app.get("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
   try {
     const slideId = req.params.id;
   
-    const story = await Story.find({ "slides._id": { $in: slideId } });
+  const story = await Story.findOne({ "slides._id": slideId });
    
-    console.log(story);
+  
     if (!story) {
       return res.json({ error: "Story not found" });
     }
