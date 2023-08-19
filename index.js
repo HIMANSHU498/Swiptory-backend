@@ -159,7 +159,25 @@ app.put("/api/story/edit/:id", IsAuthenticated, async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+// API to get story for edit
+app.get("api/story/edit/:id", IsAuthenticated, async (req, res) => {
+  try {
+    const slideId = req.params.id;
+  
+    const story = await Story.find({ "slides._id": { $in: slideId } });
+   
+    console.log(story);
+    if (!story) {
+      return res.json({ error: "Story not found" });
+    }
 
+    return res.json({
+      story: story,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 // API to get stories by category
 app.get("/api/stories/:category", async (req, res) => {
   try {
