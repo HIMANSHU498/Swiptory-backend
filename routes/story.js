@@ -152,7 +152,7 @@ router.get("/storiesbyuser", IsAuthenticated, async (req, res) => {
   }
 });
 // API to get a story by storyId or slideId
-router.get("/api/story/:id", async (req, res) => {
+router.get("/stories/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const story = await Story.findOne({ _id: id });

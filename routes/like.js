@@ -5,7 +5,7 @@ const Like = require("../models/Likes");
 const IsAuthenticated = require("../middlewares/IsAuthenticated");
 
 // api to  like a story
-router.post("/:storyId/like", IsAuthenticated, async (req, res) => {
+router.post("/:storyId", IsAuthenticated, async (req, res) => {
   try {
     const loggedInUserId = req.user.username;
     const storyId = req.params.storyId;
@@ -27,7 +27,7 @@ router.post("/:storyId/like", IsAuthenticated, async (req, res) => {
 });
 
 //to get likes
-router.get("/:id/likes", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const storyId = req.params.id;
 
