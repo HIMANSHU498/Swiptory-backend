@@ -18,7 +18,7 @@ router.post("/:storyId", IsAuthenticated, async (req, res) => {
 
     if (existingBookmark) {
       await Bookmark.deleteOne({ _id: existingBookmark._id });
-      return res.json({ error: "Story bookmarked removed" });
+      return res.json({ message: "Story bookmarked removed" });
     } else {
       await Bookmark.create({
         story: storyId,
