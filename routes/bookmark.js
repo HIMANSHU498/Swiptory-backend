@@ -18,7 +18,7 @@ router.post("/:storyId", IsAuthenticated, async (req, res) => {
 
     if (existingBookmark) {
       await Bookmark.deleteOne({ _id: existingBookmark._id });
-      return res.json({ error: "Story bookmarked removed" });
+      return res.json({ message: "Story bookmarked removed" });
     } else {
       await Bookmark.create({
         story: storyId,
@@ -33,25 +33,32 @@ router.post("/:storyId", IsAuthenticated, async (req, res) => {
 });
 
 // api to get all the bookmark stories by user
-router.get("/bookmarkedstories", IsAuthenticated, async (req, res) => {
+router.get("/bookmarkedslides", IsAuthenticated, async (req, res) => {
   try {
     const loggedInUserId = req.user.username;
+    const bookmarkedSlides = await Bookmark.find({
+      bookmarkedbyuser: loggedInUserId,
+    });
 
-    const bookmarks = await Bookmark.find({ bookmarkedbyuser: loggedInUserId });
-    const storyIds = bookmarks.map((bookmark) => bookmark.story);
+    const slideIds = bookmarkedSlides.map((bookmark) => bookmark.story);
 
-    Story.find({ "slides._id": { $in: storyIds } })
-      .then((stories) => {
-        if (stories.length > 0) {
-          const slides = stories.flatMap((story) => story.slides);
-          res.json(slides);
-        } else {
-          res.json({ error: "Slides not found" });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    const slidesToReturn = [];
+
+    for (const slideId of slideIds) {
+      const matchingSlide = await Story.findOne(
+        { "slides._id": slideId },
+        { slides: { $elemMatch: { _id: slideId } } }
+      );
+      if (matchingSlide && matchingSlide.slides.length > 0) {
+        slidesToReturn.push(matchingSlide.slides[0]);
+      }
+    }
+
+    res.json(
+      slidesToReturn.length > 0
+        ? slidesToReturn
+        : { error: "No bookmarked slides found" }
+    );
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
