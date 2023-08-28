@@ -13,18 +13,20 @@ router.post("/:storyId", IsAuthenticated, async (req, res) => {
 
     const existingBookmark = await Bookmark.findOne({
       story: storyId,
-      user: loggedInUserId,
-    });
-    if (existingBookmark) {
-      return res.status(400).json({ error: "Story already bookmarked" });
-    }
-
-    await Bookmark.create({
-      story: storyId,
       bookmarkedbyuser: loggedInUserId,
     });
 
-    res.json({ message: "Story bookmarked successfully" });
+    if (existingBookmark) {
+      await Bookmark.deleteOne({ _id: existingBookmark._id });
+      return res.json({ error: "Story bookmarked removed" });
+    } else {
+      await Bookmark.create({
+        story: storyId,
+        bookmarkedbyuser: loggedInUserId,
+      });
+
+      return res.json({ message: "Story bookmarked successfully" });
+    }
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -56,12 +58,13 @@ router.get("/bookmarkedstories", IsAuthenticated, async (req, res) => {
 });
 
 // API to search a story by its ID
-router.get("/:id/isbookmarked", async (req, res) => {
+router.get("/:id/isbookmarked", IsAuthenticated, async (req, res) => {
   try {
     const storyId = req.params.id;
-
+    const loggedInUserId = req.user.username;
     const bookmark = await Bookmark.findOne({
       story: storyId,
+      bookmarkedbyuser: loggedInUserId,
     });
 
     if (bookmark) {

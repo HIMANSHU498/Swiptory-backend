@@ -12,26 +12,27 @@ router.post("/:storyId", IsAuthenticated, async (req, res) => {
 
     const existingLike = await Like.findOne({
       story: storyId,
-      user: loggedInUserId,
+      likedbyuser: loggedInUserId,
     });
+
     if (existingLike) {
-      return res.status(400).json({ error: "Story already liked" });
+      await Like.deleteOne({ _id: existingLike._id });
+      return res.json({ message: "Story like removed successfully" });
+    } else {
+      await Like.create({ story: storyId, likedbyuser: loggedInUserId });
+
+      return res.json({ message: "Story liked successfully" });
     }
-
-    await Like.create({ story: storyId, likedbyuser: loggedInUserId });
-
-    res.json({ message: "Story liked successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-//to get likes
+//to get total likes
 router.get("/:id", async (req, res) => {
   try {
     const storyId = req.params.id;
 
-    // Count the number of likes for the given story ID
     const likeCount = await Like.countDocuments({ story: storyId });
 
     res.json({ likes: likeCount });
@@ -39,12 +40,13 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-router.get("/:id/isliked", async (req, res) => {
+router.get("/:id/isliked", IsAuthenticated, async (req, res) => {
   try {
     const storyId = req.params.id;
-
+    const loggedInUserId = req.user.username;
     const like = await Like.findOne({
       story: storyId,
+      likedbyuser: loggedInUserId,
     });
 
     if (like) {
