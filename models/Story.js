@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+//dev
 const slideSchema = new mongoose.Schema({
   slideHeading: {
     type: String,
